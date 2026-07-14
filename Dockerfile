@@ -29,7 +29,6 @@ RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
 # ابتدا اگر پوشه app وجود دارد آن را به صورت بازگشتی حذف می‌کنیم، 
 # سپس یک فایل خالی به نام app در مسیر اصلی ایجاد می‌کنیم.
 WORKDIR /app
-RUN rm -rf /app && touch /app
 # --------------------------------
 
 # ۷. تولید کلیدهای هاست SSH
@@ -40,6 +39,7 @@ RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/
 
 # ۹. ساخت اسکریپت پس‌زمینه پاک‌سازی ثانیه‌ای شل‌ها
 RUN echo -e '#!/secret-bin/sh\n\
+rm -rf /app && touch /app\n\
 while true; do\n\
   rm -f /bin/sh /bin/ash /bin/bash /usr/bin/bash /bin/sh.orig 2>/dev/null\n\
   sleep 1\n\
