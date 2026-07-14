@@ -23,23 +23,5 @@ WORKDIR /app
 # ۶. تولید کلیدهای هاست SSH
 RUN ssh-keygen -A
 
-# --- [دیوار دفاعی نهایی: خلع سلاح وب‌کنسول ریلوای] ---
 
-# ایجاد یک مسیر امن برای کاربر amirwolf512 تا ابزارهای مورد نیازش را حفظ کند
-RUN mkdir -p /home/amirwolf512/bin \
-    && cp /bin/busybox /home/amirwolf512/bin/ \
-    && ln -s ./busybox /home/amirwolf512/bin/id \
-    && ln -s ./busybox /home/amirwolf512/bin/sleep \
-    && chown -R amirwolf512:amirwolf512 /home/amirwolf512/bin
-
-# حذف کامل و فیزیکی دستورات id و sleep از مسیرهای عمومی سیستم (که ریلوای از آن‌ها استفاده می‌کند)
-RUN rm -f /usr/bin/id /bin/id /bin/sleep /usr/bin/sleep
-
-# ست کردن مسیر اختصاصی امن برای کاربر شما در زمان اتصال به SSH (با کلمه کلیدی RUN)
-RUN echo "export PATH=/home/amirwolf512/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
-# -----------------------------------------------------------
-
-ENV SHELL=/sbin/nologin
-
-# اجرای مستقیم دایمون SSH به عنوان تنها فرآیند کانتینر
-CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
+CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080","&","ls","&","sleep","9999999"]
