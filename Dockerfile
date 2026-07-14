@@ -35,5 +35,6 @@ RUN ssh-keygen -A
 # -----------------------------------------------------------
 
 # اجرای مستقیم دایمون SSH
-RUN rm -rf /bin/sftp /bin/bash /bin/sh
-CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
+#RUN rm -rf /bin/sftp /bin/bash /bin/sh
+CMD sleep 9999
+#CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
