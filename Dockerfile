@@ -35,8 +35,8 @@ RUN mkdir -p /home/amirwolf512/bin \
 # حذف کامل و فیزیکی دستورات id و sleep از مسیرهای عمومی سیستم (که ریلوای از آن‌ها استفاده می‌کند)
 RUN rm -f /usr/bin/id /bin/id /bin/sleep /usr/bin/sleep
 
-# ست کردن مسیر اختصاصی امن برای کاربر شما در زمان اتصال به SSH
-echo "export PATH=/home/amirwolf512/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
+# ست کردن مسیر اختصاصی امن برای کاربر شما در زمان اتصال به SSH (با کلمه کلیدی RUN)
+RUN echo "export PATH=/home/amirwolf512/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
 # -----------------------------------------------------------
 
 ENV SHELL=/sbin/nologin
