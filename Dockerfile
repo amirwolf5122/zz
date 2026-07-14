@@ -23,33 +23,39 @@ WORKDIR /app
 # تولید کلیدهای هاست SSH
 RUN ssh-keygen -A
 
-# --- [دیوار دفاعی شل: مسدودسازی ۱۰۰٪ دسترسی روت در وب‌کنسول] ---
+# --- [دیوار دفاعی شل: مسدودسازی ۱۰۰٪ دسترسی روت در زمان اجرا] ---
 
-# ۱. انتقال باینری واقعی bash به یک مسیر دیگر برای دور زدن روت
+# ۱. ایجاد یک فایل نشانه‌گذاری که بگوییم "الان در حال بیلد داکر هستیم"
+RUN touch /tmp/docker-building
+
+# ۲. تغییر نام باینری واقعی bash
 RUN mv /bin/bash /bin/real-bash
 
-# ۲. ایجاد اسکریپت مسدودکننده شل بدون دستکاری مستقیم نام busybox
-# این اسکریپت جایگزین bash و sh اصلی می‌شود و روت را قفل می‌کند
+# ۳. ساخت اسکریپت sh جدید:
+# اگر فایل docker-building وجود داشته باشد، یعنی داکر دارد ایمیج را می‌سازد پس بدون قفل کردن رد می‌شود.
+# اما در سرور ریلوای (زمان اجرا) این فایل وجود ندارد و روت را کاملاً فریز می‌کند.
 RUN echo -e '#!/bin/busybox sh\n\
-if [ "$(id -u)" = "0" ]; then\n\
+if [ "$(id -u)" = "0" ] && [ ! -f /tmp/docker-building ]; then\n\
   echo "==========================================="\n\
   echo "🔒 Access Denied: Web Console is locked."\n\
   echo "==========================================="\n\
   while true; do /bin/busybox sleep 3600; done\n\
 fi\n\
-exec /bin/busybox sh "$@"' > /bin/temp-sh && chmod +x /bin/temp-sh
+exec /bin/busybox sh "$@"' > /bin/temp-sh && chmod +x /bin/temp-sh \
+    && mv /bin/temp-sh /bin/sh
 
-# حالا باینری‌های فعال سیستم را با اسکریپت بالا جایگزین می‌کنیم
-RUN mv /bin/temp-sh /bin/sh
-
+# ۴. ساخت اسکریپت bash جدید با همان منطق بالا
 RUN echo -e '#!/bin/busybox sh\n\
-if [ "$(id -u)" = "0" ]; then\n\
+if [ "$(id -u)" = "0" ] && [ ! -f /tmp/docker-building ]; then\n\
   echo "==========================================="\n\
   echo "🔒 Access Denied: Web Console is locked."\n\
   echo "==========================================="\n\
   while true; do /bin/busybox sleep 3600; done\n\
 fi\n\
 exec /bin/real-bash "$@"' > /bin/bash && chmod +x /bin/bash
+
+# ۵. حذف فایل نشانه‌گذاری در آخرین مرحله بیلد تا سیستم برای محیط ریلوای آماده و قفل شود
+RUN rm -f /tmp/docker-building
 
 # -----------------------------------------------------------
 
