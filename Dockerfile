@@ -1,39 +1,45 @@
 FROM python:3.13-alpine
 
-# نصب پکیج‌های مورد نیاز
+# ۱. نصب پکیج‌های مورد نیاز
 RUN apk add --no-cache zip unzip ffmpeg whois openssh bash-completion bash
 
-# ساخت پوشه ران‌تایم SSH
+# ۲. ساخت پوشه ران‌تایم SSH
 RUN mkdir -p /var/run/sshd && chmod 0755 /var/run/sshd
 
-# قفل کردن کامل پسورد اکانت روت
+# ۳. قفل کردن کامل پسورد اکانت روت
 RUN passwd -l root
 
-# ساخت کاربر غیر روت برای استفاده در SSH/SFTP
+# ۴. ساخت کاربر غیر روت برای استفاده در SSH/SFTP
 RUN adduser -D -u 1000 -s /bin/bash amirwolf512 \
     && echo 'amirwolf512:amirwolfcl' | chpasswd
 
-# تنظیمات امنیت SSH (اجازه ورود فقط به amirwolf512)
+# ۵. تنظیمات امنیت SSH (اجازه ورود فقط به amirwolf512)
 RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && echo "AllowUsers amirwolf512" >> /etc/ssh/sshd_config
 
 WORKDIR /app
 
-# تولید کلیدهای هاست SSH
+# ۶. تولید کلیدهای هاست SSH
 RUN ssh-keygen -A
 
-# --- [دیوار دفاعی جدید: نابود کردن متغیرهای شل سیستم] ---
+# --- [دیوار دفاعی نهایی: خلع سلاح وب‌کنسول ریلوای] ---
 
-# تغییر شل پیش‌فرض روت در سیستم به یک مسیر کاملاً نامعتبر
-RUN sed -i 's|root:x:0:0:root:/root:/bin/sh|root:x:0:0:root:/root:/sbin/nologin|g' /etc/passwd
+# ایجاد یک مسیر امن برای کاربر amirwolf512 تا ابزارهای مورد نیازش را حفظ کند
+RUN mkdir -p /home/amirwolf512/bin \
+    && cp /bin/busybox /home/amirwolf512/bin/ \
+    && ln -s ./busybox /home/amirwolf512/bin/id \
+    && ln -s ./busybox /home/amirwolf512/bin/sleep \
+    && chown -R amirwolf512:amirwolf512 /home/amirwolf512/bin
 
-# تعریف متغیرهای محیطی به طوری که هر ابزار اتصالی (مثل ریلوای) کاملاً گمراه شود
-ENV SHELL=/sbin/nologin
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TERM=dumb
+# حذف کامل و فیزیکی دستورات id و sleep از مسیرهای عمومی سیستم (که ریلوای از آن‌ها استفاده می‌کند)
+RUN rm -f /usr/bin/id /bin/id /bin/sleep /usr/bin/sleep
 
+# ست کردن مسیر اختصاصی امن برای کاربر شما در زمان اتصال به SSH
+echo "export PATH=/home/amirwolf512/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
 # -----------------------------------------------------------
 
-# اجرای مستقیم دایمون SSH با مسیر مطلق (بدون وابستگی به شل‌های پیش‌فرض)
+ENV SHELL=/sbin/nologin
+
+# اجرای مستقیم دایمون SSH به عنوان تنها فرآیند کانتینر
 CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
