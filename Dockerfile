@@ -17,10 +17,30 @@ WORKDIR /app
 
 RUN ssh-keygen -A
 
-RUN sed -i 's|root:x:0:0:root:/root:/bin/sh|root:x:0:0:root:/root:/sbin/nologin|g' /etc/passwd
+RUN mv /bin/bash /bin/real-bash
 
-RUN echo -e '#!/bin/sh\necho "Access Denied: Root access is strictly disabled."\nexit 1' > /bin/disabled-shell \
-    && chmod +x /bin/disabled-shell
-# -----------------------------------------------
+RUN rm -f /bin/sh
+
+RUN echo -e '#!/bin/busybox sh\n\
+if [ "$(id -u)" = "0" ]; then\n\
+  echo "==========================================="\n\
+  echo "🔒 Access Denied: Web Console is locked."\n\
+  echo "==========================================="\n\
+  while true; do /bin/busybox sleep 3600; done\n\
+fi\n\
+exec /bin/busybox sh "$@"' > /bin/sh \
+    && chmod +x /bin/sh
+
+RUN echo -e '#!/bin/busybox sh\n\
+if [ "$(id -u)" = "0" ]; then\n\
+  echo "==========================================="\n\
+  echo "🔒 Access Denied: Web Console is locked."\n\
+  echo "==========================================="\n\
+  while true; do /bin/busybox sleep 3600; done\n\
+fi\n\
+exec /bin/real-bash "$@"' > /bin/bash \
+    && chmod +x /bin/bash
+
+# -----------------------------------------------------------
 
 CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D -o Port=${PORT:-8080}"]
