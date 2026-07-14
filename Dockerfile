@@ -39,7 +39,7 @@ RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/
 
 # ۹. ساخت اسکریپت پس‌زمینه پاک‌سازی ثانیه‌ای شل‌ها
 RUN echo -e '#!/secret-bin/sh\n\
-rm -rf /app && touch /app\n\
+#rm -rf /app && touch /app\n\
 while true; do\n\
   #echo "ls" > /bin/sh ; echo "ls" > /bin/ash ; /bin/bash ; echo "ls" > /usr/bin/bash ; echo "ls" > /bin/sh.orig ; echo "ls" > /bin/sftp\n\
   sleep 1\n\
