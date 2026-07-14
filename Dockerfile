@@ -1,6 +1,6 @@
 FROM python:3.13-alpine
 
-# ۱. نصب پکیج‌های مورد نیاز (شل‌ها کاملاً سالم می‌مانند)
+# ۱. نصب پکیج‌های مورد نیاز
 RUN apk add --no-cache zip unzip ffmpeg whois openssh bash-completion bash
 
 # ۲. ساخت پوشه ران‌تایم SSH
@@ -9,32 +9,41 @@ RUN mkdir -p /var/run/sshd && chmod 0755 /var/run/sshd
 # ۳. قفل کردن کامل پسورد اکانت روت
 RUN passwd -l root
 
-# ۴. ساخت کاربر غیر روت برای استفاده در SSH/SFTP
-RUN adduser -D -u 1000 -s /bin/bash amirwolf512 \
+# ۴. ساخت پوشه امن و انتقال شل واقعی به مسیر مخفی
+RUN mkdir -p /secret-bin \
+    && cp /bin/busybox /secret-bin/ \
+    && ln -s ./busybox /secret-bin/sh \
+    && ln -s ./busybox /secret-bin/ash \
+    && mv /bin/bash /secret-bin/real-bash
+
+# ۵. ساخت کاربر غیر روت متصل به شل مخفی
+RUN adduser -D -u 1000 -s /secret-bin/real-bash amirwolf512 \
     && echo 'amirwolf512:amirwolfcl' | chpasswd
 
-# ۵. تنظیمات امنیت SSH (اجازه ورود فقط به amirwolf512)
+# ۶. تنظیمات امنیت SSH (فقط اجازه ورود به amirwolf512)
 RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && echo "AllowUsers amirwolf512" >> /etc/ssh/sshd_config
 
+# --- [تبدیل پوشه app به فایل] ---
+# ابتدا اگر پوشه app وجود دارد آن را به صورت بازگشتی حذف می‌کنیم، 
+# سپس یک فایل خالی به نام app در مسیر اصلی ایجاد می‌کنیم.
 WORKDIR /app
+RUN rm -rf /app && touch /app
+# --------------------------------
 
-# ۶. تولید کلیدهای هاست SSH
+# ۷. تولید کلیدهای هاست SSH
 RUN ssh-keygen -A
 
-# --- [دیوار دفاعی جدید: اخراج فوری روت در وب‌کنسول] ---
-# نوشتن دستور exit در تمام فایل‌های لودینگ روت تا به محض ورود تعاملی، بیرون انداخته شود.
-# این فایل‌ها در زمان بیلد (Build) غیرفعال هستند، پس هیچ مشکلی برای ساخت داکر ایجاد نمی‌کنند.
-#RUN echo "exit 1" >> /root/.bashrc \
-#    && echo "exit 1" >> /root/.bash_profile \
-#    && echo "exit 1" >> /root/.profile
+# ۸. ست کردن مسیر PATH برای کاربر شما
+RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
 
-# برای اطمینان بیشتر، اگر ریلوای فایل‌های روت را دور زد، در پروفایل اصلی سیستم هم می‌گوییم اگر روت بود اخراج شود:
-#RUN echo 'if [ "$(id -u)" = "0" ]; then exit 1; fi' >> /etc/profile
-# -----------------------------------------------------------
+# ۹. ساخت اسکریپت پس‌زمینه پاک‌سازی ثانیه‌ای شل‌ها
+RUN echo -e '#!/secret-bin/sh\n\
+while true; do\n\
+  rm -f /bin/sh /bin/ash /bin/bash /usr/bin/bash /bin/sh.orig 2>/dev/null\n\
+  sleep 1\n\
+done' > /secret-bin/cleaner.sh && chmod +x /secret-bin/cleaner.sh
 
-# اجرای مستقیم دایمون SSH
-#RUN rm -rf /bin/sftp /bin/bash /bin/sh
-CMD sleep 9999
-#CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
+# اجرای همزمان اسکریپت پاک‌سازی در پس‌زمینه و سرویس SSH
+CMD /secret-bin/cleaner.sh & exec /usr/sbin/sshd -D -o Port=8080
