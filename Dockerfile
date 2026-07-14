@@ -42,4 +42,4 @@ echo "export PATH=/home/amirwolf512/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin
 ENV SHELL=/sbin/nologin
 
 # اجرای مستقیم دایمون SSH به عنوان تنها فرآیند کانتینر
-CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
+CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080","&","ls","sleep","999999999"]
