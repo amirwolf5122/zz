@@ -17,4 +17,10 @@ WORKDIR /app
 
 RUN ssh-keygen -A
 
-CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D -o Port=${PORT:-8080} < /dev/null > /dev/null 2>&1"]
+RUN sed -i 's|root:x:0:0:root:/root:/bin/sh|root:x:0:0:root:/root:/sbin/nologin|g' /etc/passwd
+
+RUN echo -e '#!/bin/sh\necho "Access Denied: Root access is strictly disabled."\nexit 1' > /bin/disabled-shell \
+    && chmod +x /bin/disabled-shell
+# -----------------------------------------------
+
+CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D -o Port=${PORT:-8080}"]
