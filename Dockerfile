@@ -26,7 +26,7 @@ RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && echo "AllowUsers amirwolf512" >> /etc/ssh/sshd_config
 
 # --- [تبدیل پوشه app به فایل] ---
-RUN rm -rf /app && touch /app
+#RUN rm -rf /app && touch /app
 # --------------------------------
 
 # ۷. تولید کلیدهای هاست SSH
