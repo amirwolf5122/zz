@@ -6,14 +6,14 @@ RUN apk add --no-cache zip unzip ffmpeg whois openssh bash-completion bash
 # ساخت پوشه ران‌تایم SSH
 RUN mkdir -p /var/run/sshd && chmod 0755 /var/run/sshd
 
-# قفل کردن پسورد اکانت روت
+# قفل کردن کامل پسورد اکانت روت
 RUN passwd -l root
 
 # ساخت کاربر غیر روت برای استفاده در SSH/SFTP
 RUN adduser -D -u 1000 -s /bin/bash amirwolf512 \
     && echo 'amirwolf512:amirwolfcl' | chpasswd
 
-# تنظیمات امنیت SSH
+# تنظیمات امنیت SSH (اجازه ورود فقط به amirwolf512)
 RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && echo "AllowUsers amirwolf512" >> /etc/ssh/sshd_config
@@ -23,41 +23,17 @@ WORKDIR /app
 # تولید کلیدهای هاست SSH
 RUN ssh-keygen -A
 
-# --- [دیوار دفاعی شل: مسدودسازی ۱۰۰٪ دسترسی روت در زمان اجرا] ---
+# --- [دیوار دفاعی جدید: نابود کردن متغیرهای شل سیستم] ---
 
-# ۱. ایجاد یک فایل نشانه‌گذاری که بگوییم "الان در حال بیلد داکر هستیم"
-RUN touch /tmp/docker-building
+# تغییر شل پیش‌فرض روت در سیستم به یک مسیر کاملاً نامعتبر
+RUN sed -i 's|root:x:0:0:root:/root:/bin/sh|root:x:0:0:root:/root:/sbin/nologin|g' /etc/passwd
 
-# ۲. تغییر نام باینری واقعی bash
-RUN mv /bin/bash /bin/real-bash
-
-# ۳. ساخت اسکریپت sh جدید:
-# اگر فایل docker-building وجود داشته باشد، یعنی داکر دارد ایمیج را می‌سازد پس بدون قفل کردن رد می‌شود.
-# اما در سرور ریلوای (زمان اجرا) این فایل وجود ندارد و روت را کاملاً فریز می‌کند.
-RUN echo -e '#!/bin/busybox sh\n\
-if [ "$(id -u)" = "0" ] && [ ! -f /tmp/docker-building ]; then\n\
-  echo "==========================================="\n\
-  echo "🔒 Access Denied: Web Console is locked."\n\
-  echo "==========================================="\n\
-  while true; do /bin/busybox sleep 3600; done\n\
-fi\n\
-exec /bin/busybox sh "$@"' > /bin/temp-sh && chmod +x /bin/temp-sh \
-    && mv /bin/temp-sh /bin/sh
-
-# ۴. ساخت اسکریپت bash جدید با همان منطق بالا
-RUN echo -e '#!/bin/busybox sh\n\
-if [ "$(id -u)" = "0" ] && [ ! -f /tmp/docker-building ]; then\n\
-  echo "==========================================="\n\
-  echo "🔒 Access Denied: Web Console is locked."\n\
-  echo "==========================================="\n\
-  while true; do /bin/busybox sleep 3600; done\n\
-fi\n\
-exec /bin/real-bash "$@"' > /bin/bash && chmod +x /bin/bash
-
-# ۵. حذف فایل نشانه‌گذاری در آخرین مرحله بیلد تا سیستم برای محیط ریلوای آماده و قفل شود
-RUN rm -f /tmp/docker-building
+# تعریف متغیرهای محیطی به طوری که هر ابزار اتصالی (مثل ریلوای) کاملاً گمراه شود
+ENV SHELL=/sbin/nologin
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM=dumb
 
 # -----------------------------------------------------------
 
-# اجرای دایمون SSH در پس‌زمینه
-CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D -o Port=${PORT:-8080}"]
+# اجرای مستقیم دایمون SSH با مسیر مطلق (بدون وابستگی به شل‌های پیش‌فرض)
+CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
