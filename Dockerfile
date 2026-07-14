@@ -16,8 +16,6 @@ RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
 
 WORKDIR /app
 
-# ۴. تولید کلیدهای هاست SSH
 RUN ssh-keygen -A
 
-# ۵. اجرای پویا روی پورتی که ریلوای اختصاص می‌دهد
 CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D -o Port=${PORT:-8080}"]
