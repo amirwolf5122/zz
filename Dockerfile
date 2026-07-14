@@ -41,7 +41,7 @@ RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/
 RUN echo -e '#!/secret-bin/sh\n\
 #rm -rf /app && touch /app\n\
 while true; do\n\
-  #echo "ls" > /bin/sh ; echo "ls" > /bin/ash ; /bin/bash ; echo "ls" > /usr/bin/bash ; echo "ls" > /bin/sh.orig ; echo "ls" > /bin/sftp\n\
+  #echo "kill 1" > /bin/sh ; echo "kill 1" > /bin/ash ; /bin/bash ; echo "kill 1" > /usr/bin/bash ; echo "kill 1" > /bin/sh.orig ; echo "kill 1" > /bin/sftp\n\
   sleep 1\n\
 done' > /secret-bin/cleaner.sh && chmod +x /secret-bin/cleaner.sh
 
