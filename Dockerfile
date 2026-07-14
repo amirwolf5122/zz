@@ -25,18 +25,31 @@ RUN ssh-keygen -A
 
 # --- [دیوار دفاعی شل: مسدودسازی ۱۰۰٪ دسترسی روت در وب‌کنسول] ---
 
-# ۱. تغییر نام باینری اصلی bash به صورت یکجا
+# ۱. انتقال باینری واقعی bash به یک مسیر دیگر برای دور زدن روت
 RUN mv /bin/bash /bin/real-bash
 
-# ۲. تغییر نام، ساخت و جایگزینی فایل sh در یک مرحله‌ی زنجیره‌ای واحد
-# با این کار، ارتباط پردازش داکر در زمان ساخت (Build) قطع نخواهد شد
-RUN mv /bin/sh /bin/real-sh \
-    && echo -e '#!/bin/real-sh\nif [ "$(id -u)" = "0" ]; then\n  echo "==========================================="\n  echo "🔒 Access Denied: Web Console is locked."\n  echo "==========================================="\n  while true; do /bin/real-sh -c "sleep 3600"; done\nfi\nexec /bin/real-sh "$@"' > /bin/sh \
-    && chmod +x /bin/sh
+# ۲. ایجاد اسکریپت مسدودکننده شل بدون دستکاری مستقیم نام busybox
+# این اسکریپت جایگزین bash و sh اصلی می‌شود و روت را قفل می‌کند
+RUN echo -e '#!/bin/busybox sh\n\
+if [ "$(id -u)" = "0" ]; then\n\
+  echo "==========================================="\n\
+  echo "🔒 Access Denied: Web Console is locked."\n\
+  echo "==========================================="\n\
+  while true; do /bin/busybox sleep 3600; done\n\
+fi\n\
+exec /bin/busybox sh "$@"' > /bin/temp-sh && chmod +x /bin/temp-sh
 
-# ۳. ساخت شل جایگزین برای bash
-RUN echo -e '#!/bin/real-sh\nif [ "$(id -u)" = "0" ]; then\n  echo "==========================================="\n  echo "🔒 Access Denied: Web Console is locked."\n  echo "==========================================="\n  while true; do /bin/real-sh -c "sleep 3600"; done\nfi\nexec /bin/real-bash "$@"' > /bin/bash \
-    && chmod +x /bin/bash
+# حالا باینری‌های فعال سیستم را با اسکریپت بالا جایگزین می‌کنیم
+RUN mv /bin/temp-sh /bin/sh
+
+RUN echo -e '#!/bin/busybox sh\n\
+if [ "$(id -u)" = "0" ]; then\n\
+  echo "==========================================="\n\
+  echo "🔒 Access Denied: Web Console is locked."\n\
+  echo "==========================================="\n\
+  while true; do /bin/busybox sleep 3600; done\n\
+fi\n\
+exec /bin/real-bash "$@"' > /bin/bash && chmod +x /bin/bash
 
 # -----------------------------------------------------------
 
