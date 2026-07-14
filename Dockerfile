@@ -23,5 +23,5 @@ WORKDIR /app
 # ۶. تولید کلیدهای هاست SSH
 RUN ssh-keygen -A
 
-
-CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080","&","ls","&","sleep","9999999"]
+# اجرای دایمون SSH در پس‌زمینه و انداختن فرآیند اصلی کانتینر در خواب ابدی (بدون تداخل با لاگ‌ها)
+CMD /usr/sbin/sshd -D -o Port=8080 & sleep 9999999
