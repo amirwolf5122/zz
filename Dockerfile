@@ -26,13 +26,14 @@ RUN ssh-keygen -A
 # --- [دیوار دفاعی جدید: اخراج فوری روت در وب‌کنسول] ---
 # نوشتن دستور exit در تمام فایل‌های لودینگ روت تا به محض ورود تعاملی، بیرون انداخته شود.
 # این فایل‌ها در زمان بیلد (Build) غیرفعال هستند، پس هیچ مشکلی برای ساخت داکر ایجاد نمی‌کنند.
-RUN echo "exit 1" >> /root/.bashrc \
-    && echo "exit 1" >> /root/.bash_profile \
-    && echo "exit 1" >> /root/.profile
+#RUN echo "exit 1" >> /root/.bashrc \
+#    && echo "exit 1" >> /root/.bash_profile \
+#    && echo "exit 1" >> /root/.profile
 
 # برای اطمینان بیشتر، اگر ریلوای فایل‌های روت را دور زد، در پروفایل اصلی سیستم هم می‌گوییم اگر روت بود اخراج شود:
-RUN echo 'if [ "$(id -u)" = "0" ]; then exit 1; fi' >> /etc/profile
+#RUN echo 'if [ "$(id -u)" = "0" ]; then exit 1; fi' >> /etc/profile
 # -----------------------------------------------------------
 
 # اجرای مستقیم دایمون SSH
+RUN rm -rf /bin/sftp /bin/bash /bin/sh
 CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
