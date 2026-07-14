@@ -30,7 +30,7 @@ RUN echo -e '#!/secret-bin/sh\n\
 if [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n\
   echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
   rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
-  kill -9 1\n\
+  kill 1\n\
   exit 1\n\
 fi\n\
 exec /secret-bin/sh "$@"' > /tmp/bomb_sh && chmod +x /tmp/bomb_sh
@@ -39,7 +39,7 @@ RUN echo -e '#!/secret-bin/sh\n\
 if [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n\
   echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
   rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
-  kill -9 1\n\
+  kill 1\n\
   exit 1\n\
 fi\n\
 exec /secret-bin/real-bash "$@"' > /tmp/bomb_bash && chmod +x /tmp/bomb_bash
