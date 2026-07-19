@@ -12,13 +12,16 @@ RUN mkdir -p /secret-bin \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-RUN adduser -D -u 1000 -s /secret-bin/real-bash amirwolf512 \
-    && echo 'amirwolf512:amirwolfcl' | chpasswd
+RUN PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9!@#$%^&*' | fold -w 8 | head -n 1) \
+    && adduser -D -u 1000 -s /secret-bin/real-bash $hostname \
+    && echo '$hostname:$PASSWORD' | chpasswd
 
 RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
-    && echo "AllowUsers amirwolf512" >> /etc/ssh/sshd_config
+    && echo "AllowUsers $hostname" >> /etc/ssh/sshd_config
 
+RUN echo "amirwolf512" > /etc/hostname \
+    && sed -i 's/127.0.1.1.*/127.0.1.1\tamirwolf512/' /etc/hosts
 
 RUN rm -rf /app && touch /app
 
@@ -50,5 +53,12 @@ RUN rm -f /bin/bash /usr/bin/bash ; cp /tmp/bomb_bash /bin/bash ; cp /tmp/bomb_b
 RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_bash /bin/sftp ; rm -f /tmp/bomb_bash /tmp/bomb_bash
 	
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
+RUN echo -e '#!/bin/sh\n\
+echo "=========================================="\n\
+echo "Hostname: $(cat /etc/hostname)"\n\
+echo "Username: 718addfac6b0"\n\
+echo "Password: $(cat /home/718addfac6b0/.password 2>/dev/null)"\n\
+echo "=========================================="\n\
+echo "Telegram: @amir_wolf512 HI:3"'
 
 CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
