@@ -60,8 +60,8 @@ RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 RUN echo -e '#!/bin/sh\n\
 echo "=========================================="\n\
 echo "Hostname: $(cat /etc/hostname)"\n\
-echo "Username: 718addfac6b0"\n\
-echo "Password: $(cat /home/718addfac6b0/.password 2>/dev/null)"\n\
+echo "Username: {$hostname}"\n\
+echo "Password: $PASSWORD"\n\
 echo "=========================================="\n\
 echo "Telegram: @amir_wolf512 HI:3"'
 
