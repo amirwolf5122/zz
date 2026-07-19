@@ -45,7 +45,6 @@ RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 # تنظیم دایمی هوست‌نیم داخل فایل
 RUN echo "amirwolf512" > /etc/hostname
 
-# ساخت اسکریپت Entrypoint برای تولید یوزر و پسورد در زمان اجرا (Runtime)
 RUN echo -e '#!/secret-bin/real-bash\n\
 usernamezz=$(cat /dev/urandom | tr -dc "a-z0-9" | head -c 8)\n\
 passwordzz=$(cat /dev/urandom | tr -dc "a-zA-Z0-9" | head -c 12)\n\
@@ -58,5 +57,4 @@ echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:
 echo -e "\\n=========================================\\n  SSH CREDENTIALS:\\n  USERNAME: $usernamezz\\n  PASSWORD: $passwordzz\\n=========================================\\n"\n\
 exec /usr/sbin/sshd -D -o Port=8080' > /entrypoint.sh && chmod +x /entrypoint.sh
 
-# اجرای اسکریپت بالا به محض روشن شدن کانتینر
 CMD ["/entrypoint.sh"]
