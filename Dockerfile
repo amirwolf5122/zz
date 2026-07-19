@@ -12,7 +12,6 @@ RUN mkdir -p /secret-bin \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-# تولید اطلاعات زمان بویلد و فیک کردن پرامپت ترمینال به فرمت دلخواه شما
 RUN usernamezz=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 8) \
     && passwordzz=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 12) \
     && adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" \
@@ -21,7 +20,6 @@ RUN usernamezz=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 8) \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && echo "AllowUsers $usernamezz" >> /etc/ssh/sshd_config \
     && echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/"$usernamezz"/.bashrc \
-    # فیک کردن پرامپت ترمینال به ساختار [amirwolf512]:~$
     && echo "export PS1='[amirwolf512]:\w\$ '" >> /home/"$usernamezz"/.bashrc \
     && echo -e "USERNAME: $usernamezz\nPASSWORD: $passwordzz" > /etc/.ssh_creds
 
@@ -54,7 +52,6 @@ RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_b
     
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 
-# اسکریپت Entrypoint برای نمایش اطلاعات ورود
 RUN echo -e '#!/secret-bin/real-bash\n\
 if [ -f /etc/.ssh_creds ]; then\n\
   echo -e "\\n=========================================\\n  SSH CREDENTIALS (BUILD TIME):"\n\
