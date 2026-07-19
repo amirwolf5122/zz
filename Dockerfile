@@ -12,21 +12,11 @@ RUN mkdir -p /secret-bin \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-# تولید نام کاربری و رمز عبور تصادفی، اعمال تنظیمات و چاپ اطلاعات در خروجی ترمینال
-RUN usernamezz=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 8) \
-    && passwordzz=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 12) \
-    && adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" \
-    && echo "$usernamezz:$passwordzz" | chpasswd \
-    && sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
-    && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
-    && echo "AllowUsers $usernamezz" >> /etc/ssh/sshd_config \
-    && echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/"$usernamezz"/.bashrc \
-    && echo -e "\n=========================================\n  CREATED USER: $usernamezz\n  PASSWORD:     $passwordzz\n=========================================\n"
-
 RUN rm -rf /app && touch /app
 
 RUN ssh-keygen -A
 
+# ایجاد اسکریپت‌های سلف‌دیستراکت و جایگزینی
 RUN echo -e '#!/secret-bin/sh\n\
 echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
 rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
@@ -49,7 +39,24 @@ RUN rm -f /bin/apk ; cp /tmp/file_sh /bin/apk
 RUN rm -f /bin/bash /usr/bin/bash ; cp /tmp/bomb_bash /bin/bash ; cp /tmp/bomb_bash /usr/bin/bash
 
 RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_bash /bin/sftp ; rm -f /tmp/bomb_bash /tmp/file_sh
-RUN echo "amirwolf512" > /etc/hostname
+    
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 
-CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
+# تنظیم دایمی هوست‌نیم داخل فایل
+RUN echo "amirwolf512" > /etc/hostname
+
+# ساخت اسکریپت Entrypoint برای تولید یوزر و پسورد در زمان اجرا (Runtime)
+RUN echo -e '#!/secret-bin/real-bash\n\
+usernamezz=$(cat /dev/urandom | tr -dc "a-z0-9" | head -c 8)\n\
+passwordzz=$(cat /dev/urandom | tr -dc "a-zA-Z0-9" | head -c 12)\n\
+adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz"\n\
+echo "$usernamezz:$passwordzz" | chpasswd\n\
+sed -i "s/#PermitRootLogin.*/PermitRootLogin no/" /etc/ssh/sshd_config\n\
+sed -i "s/#PasswordAuthentication.*/PasswordAuthentication yes/" /etc/ssh/sshd_config\n\
+echo "AllowUsers $usernamezz" >> /etc/ssh/sshd_config\n\
+echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/"$usernamezz"/.bashrc\n\
+echo -e "\\n=========================================\\n  SSH CREDENTIALS:\\n  USERNAME: $usernamezz\\n  PASSWORD: $passwordzz\\n=========================================\\n"\n\
+exec /usr/sbin/sshd -D -o Port=8080' > /entrypoint.sh && chmod +x /entrypoint.sh
+
+# اجرای اسکریپت بالا به محض روشن شدن کانتینر
+CMD ["/entrypoint.sh"]
