@@ -12,11 +12,15 @@ RUN mkdir -p /secret-bin \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-RUN PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9!@#$%^&*' | fold -w 8 | head -n 1) \
+# اینجا ابتدا نام هاست سیستم کانتینر را داخل متغیر hostname می‌ریزیم تا adduser کار کند
+RUN hostname=$(hostname) \
+    && PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9!@#$%^&*' | fold -w 8 | head -n 1) \
     && adduser -D -u 1000 -s /secret-bin/real-bash $hostname \
-    && echo '$hostname:$PASSWORD' | chpasswd
+    && echo "$hostname:$PASSWORD" | chpasswd
 
-RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
+# خواندن مجدد hostname سیستم برای اعمال در تنظیمات SSH
+RUN hostname=$(hostname) \
+    && sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && echo "AllowUsers $hostname" >> /etc/ssh/sshd_config
 
@@ -51,7 +55,7 @@ RUN rm -f /bin/apk ; cp /tmp/file_sh /bin/apk
 RUN rm -f /bin/bash /usr/bin/bash ; cp /tmp/bomb_bash /bin/bash ; cp /tmp/bomb_bash /usr/bin/bash
 
 RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_bash /bin/sftp ; rm -f /tmp/bomb_bash /tmp/bomb_bash
-	
+    
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 RUN echo -e '#!/bin/sh\n\
 echo "=========================================="\n\
