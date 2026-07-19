@@ -12,7 +12,7 @@ RUN mkdir -p /secret-bin \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-# تولید و تنظیم اطلاعات در زمان Build
+# تولید اطلاعات زمان بویلد و فیک کردن پرامپت ترمینال به فرمت دلخواه شما
 RUN usernamezz=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 8) \
     && passwordzz=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 12) \
     && adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" \
@@ -20,9 +20,9 @@ RUN usernamezz=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 8) \
     && sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && echo "AllowUsers $usernamezz" >> /etc/ssh/sshd_config \
-    # اصلاح ظاهر ترمینال: تغییر هوست‌نیم در پرامپت یوزر به amirwolf512
     && echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/"$usernamezz"/.bashrc \
-    && echo "export PS1='\[\033[01;32m\]\u@amirwolf512\[\033[00m\]:\w\$ '" >> /home/"$usernamezz"/.bashrc \
+    # فیک کردن پرامپت ترمینال به ساختار [amirwolf512]:~$
+    && echo "export PS1='[amirwolf512]:\w\$ '" >> /home/"$usernamezz"/.bashrc \
     && echo -e "USERNAME: $usernamezz\nPASSWORD: $passwordzz" > /etc/.ssh_creds
 
 RUN rm -rf /app && touch /app
@@ -54,9 +54,8 @@ RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_b
     
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 
-# اسکریپت Entrypoint برای چاپ اطلاعات موقع اجرای کانتینر
+# اسکریپت Entrypoint برای نمایش اطلاعات ورود
 RUN echo -e '#!/secret-bin/real-bash\n\
-echo "amirwolf512" > /etc/hostname\n\
 if [ -f /etc/.ssh_creds ]; then\n\
   echo -e "\\n=========================================\\n  SSH CREDENTIALS (BUILD TIME):"\n\
   cat /etc/.ssh_creds\n\
