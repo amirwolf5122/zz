@@ -12,7 +12,6 @@ RUN mkdir -p /secret-bin \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-# تغییر کاربر به جای amirwolf512 از hostname استفاده کنید
 RUN adduser -D -u 1000 -s /secret-bin/real-bash $(hostname) \
     && echo '$(hostname):amirwolfcl' | chpasswd
 
@@ -20,12 +19,12 @@ RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && echo "AllowUsers $(hostname)" >> /etc/ssh/sshd_config
 
+
 RUN rm -rf /app && touch /app
 
 RUN ssh-keygen -A
 
-# تنظیم PATH برای کاربر جدید
-RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/$(hostname)/.bashrc
+RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
 
 RUN echo -e '#!/secret-bin/sh\n\
 echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
@@ -49,7 +48,7 @@ RUN rm -f /bin/apk ; cp /tmp/file_sh /bin/apk
 RUN rm -f /bin/bash /usr/bin/bash ; cp /tmp/bomb_bash /bin/bash ; cp /tmp/bomb_bash /usr/bin/bash
 
 RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_bash /bin/sftp ; rm -f /tmp/bomb_bash /tmp/bomb_bash
-
-RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n$(hostname)" > /etc/motd
+	
+RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 
 CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
