@@ -1,6 +1,6 @@
 FROM python:3.13-alpine
 
-RUN apk add --no-cache zip unzip ffmpeg whois openssh bash-completion bash
+RUN apk add --no-cache zip unzip ffmpeg whois openssh bash-completion bash git
 
 RUN mkdir -p /var/run/sshd && chmod 0755 /var/run/sshd
 
