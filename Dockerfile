@@ -12,19 +12,20 @@ RUN mkdir -p /secret-bin \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-RUN adduser -D -u 1000 -s /secret-bin/real-bash $(hostname) \
-    && echo '$(hostname):amirwolfcl' | chpasswd
-
-RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
+# تولید نام کاربری و رمز عبور تصادفی، اعمال تنظیمات و چاپ اطلاعات در خروجی ترمینال
+RUN usernamezz=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 8) \
+    && passwordzz=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 12) \
+    && adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" \
+    && echo "$usernamezz:$passwordzz" | chpasswd \
+    && sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
     && sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
-    && echo "AllowUsers $(hostname)" >> /etc/ssh/sshd_config
-
+    && echo "AllowUsers $usernamezz" >> /etc/ssh/sshd_config \
+    && echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/"$usernamezz"/.bashrc \
+    && echo -e "\n=========================================\n  CREATED USER: $usernamezz\n  PASSWORD:     $passwordzz\n=========================================\n"
 
 RUN rm -rf /app && touch /app
 
 RUN ssh-keygen -A
-
-RUN echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/amirwolf512/.bashrc
 
 RUN echo -e '#!/secret-bin/sh\n\
 echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
@@ -47,8 +48,8 @@ RUN rm -f /bin/sh ; cp /tmp/bomb_bash /bin/sh
 RUN rm -f /bin/apk ; cp /tmp/file_sh /bin/apk
 RUN rm -f /bin/bash /usr/bin/bash ; cp /tmp/bomb_bash /bin/bash ; cp /tmp/bomb_bash /usr/bin/bash
 
-RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_bash /bin/sftp ; rm -f /tmp/bomb_bash /tmp/bomb_bash
-	
+RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_bash /bin/sftp ; rm -f /tmp/bomb_bash /tmp/file_sh
+RUN echo "amirwolf512" > /etc/hostname
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
 
 CMD ["/usr/sbin/sshd", "-D", "-o", "Port=8080"]
