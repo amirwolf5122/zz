@@ -12,8 +12,8 @@ RUN mkdir -p /secret-bin \
     && ln -s ./busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
 
-RUN usernamezz=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 8) \
-    && passwordzz=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 12) \
+RUN usernamezz="a$(cat /dev/urandom | tr -dc '0-9' | head -c 7)" \
+    && passwordzz="A$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 11)" \
     && adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" \
     && echo "$usernamezz:$passwordzz" | chpasswd \
     && sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
@@ -22,7 +22,6 @@ RUN usernamezz=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 8) \
     && echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /home/"$usernamezz"/.bashrc \
     && echo "export PS1='[amirwolf512]:\w\$ '" >> /home/"$usernamezz"/.bashrc \
     && echo -e "USERNAME: $usernamezz\nPASSWORD: $passwordzz" > /etc/.ssh_creds
-
 RUN rm -rf /app && touch /app
 
 RUN ssh-keygen -A
