@@ -13,7 +13,7 @@ RUN mkdir -p /secret-bin \
     && mv /bin/bash /secret-bin/real-bash
 
 RUN usernamezz="a$(cat /dev/urandom | tr -dc '0-9' | head -c 7)" \
-    && passwordzz="A$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 11)" \
+    && passwordzz="A$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 10)" \
     && adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" \
     && echo "$usernamezz:$passwordzz" | chpasswd \
     && sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config \
