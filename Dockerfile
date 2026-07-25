@@ -33,7 +33,7 @@ RUN apk add --no-cache bash gcompat dropbear \
     && chmod +x /tmp/file_sh \
     && echo -e '#!/secret-bin/sh\nif [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n  echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n  rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n  kill 1\n  exit 1\nfi\nexec /secret-bin/real-bash "$@"' > /tmp/bomb_bash \
     && chmod +x /tmp/bomb_bash \
-    && echo -e '#!/secret-bin/sh\nwhile [ $# -gt 0 ]; do\n  case "$1" in\n    -t) cat > "$2"; exit 0 ;;\n    -f) cat "$2"; exit 0 ;;\n  esac\n  shift\ndone\n' > /secret-bin/scp \
+    && echo -e '#!/secret-bin/sh\nmode=""\nfile=""\nwhile [ $# -gt 0 ]; do\n  case "$1" in\n    -t) mode="to" ; file="$2" ;;\n    -f) mode="from" ; file="$2" ;;\n  esac\n  shift\ndone\nif [ "$mode" = "from" ]; then\n  if [ -f "$file" ]; then\n    size=$(busybox stat -c%s "$file" 2>/dev/null || echo 0)\n    printf "C0644 %d %s\n" "$size" "$(basename "$file")"\n    cat "$file"\n    printf "\000"\n  fi\nelif [ "$mode" = "to" ]; then\n  printf "\000"\n  read -r header\n  cat > "$file"\n  printf "\000"\nfi\n' > /secret-bin/scp \
     && chmod 755 /secret-bin/scp \
     && ln -s /secret-bin/scp /usr/bin/scp 2>/dev/null || true \
     \
