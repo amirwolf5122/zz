@@ -1,5 +1,5 @@
 FROM python:3.13-alpine
-
+ENV PATH="/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
 RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server \
     && mkdir -p /secret-bin /etc/dropbear \
     && passwd -l root \
