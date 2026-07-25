@@ -9,10 +9,13 @@ RUN passwd -l root
 RUN mkdir -p /secret-bin \
     && cp /bin/busybox /secret-bin/ \
     && chown root:root /secret-bin/busybox \
-    && chmod 755 /secret-bin/busybox \
+    && chmod 700 /secret-bin/busybox \
     && ln -s /secret-bin/busybox /secret-bin/sh \
     && ln -s /secret-bin/busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
+RUN for cmd in sh ash ls cat mkdir rm cp mv echo chmod grep sed awk find touch clear dirnames base64; do \
+      ln -s /secret-bin/busybox /secret-bin/$cmd 2>/dev/null || true; \
+    done
 RUN usernamezz="a$(cat /dev/urandom | tr -dc '0-9' | head -c 7)" \
     && passwordzz="A$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 10)" \
     && adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" \
