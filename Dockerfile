@@ -54,7 +54,7 @@ RUN apk add --no-cache bash gcompat dropbear \
     && find /usr/local/lib/python3.13/ -name '__pycache__' -exec rm -r {} + \
     \
     && echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd \
-    && echo -e '#!/secret-bin/real-bash\nif [ -f /etc/.ssh_creds ]; then\n  echo -e "\\n=========================================\\n  SSH CREDENTIALS (BUILD TIME):"\n  cat /etc/.ssh_creds\n  echo -e "=========================================\\n"\nfi\nexec /usr/sbin/dropbear -E -F -p 8080' > /entrypoint.sh \
+    && echo -e '#!/secret-bin/real-bash\nif [ -f /etc/.ssh_creds ]; then\n  echo -e "\\n=========================================\\n  SSH CREDENTIALS (BUILD TIME):"\n  cat /etc/.ssh_creds\n  echo -e "=========================================\\n"\nfi\nexec /usr/sbin/dropbear -F -p 8080 >/dev/null 2>&1' > /entrypoint.sh \
     && chmod +x /entrypoint.sh \
     \
     && rm -f /bin/sh /bin/bash /usr/bin/bash \
