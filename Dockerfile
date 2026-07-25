@@ -37,14 +37,6 @@ RUN for bin in ps apk top htop lsof pgrep; do \
       done; \
     done
 
-RUN echo -e '#!/secret-bin/sh\necho "Access Denied: Terminal/CLI execution is disabled."\nexit 1' > /tmp/block_exec \
-    && chmod +x /tmp/block_exec \
-    && cp /tmp/block_exec /bin/sh \
-    && cp /tmp/block_exec /bin/bash \
-    && cp /tmp/block_exec /usr/bin/bash \
-    && cp /tmp/block_exec /bin/ash \
-    && rm -f /tmp/block_exec
-
 RUN rm -f /root/.bashrc /root/.bash_profile
 
 RUN echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd
@@ -56,5 +48,13 @@ if [ -f /etc/.ssh_creds ]; then\n\
   echo -e "=========================================\\n"\n\
 fi\n\
 exec /usr/sbin/sshd -D -o Port=8080' > /entrypoint.sh && chmod +x /entrypoint.sh
+
+RUN echo -e '#!/secret-bin/sh\necho "Access Denied: Terminal/CLI execution is disabled."\nexit 1' > /tmp/block_exec \
+    && chmod +x /tmp/block_exec \
+    && cp /tmp/block_exec /bin/sh \
+    && cp /tmp/block_exec /bin/bash \
+    && cp /tmp/block_exec /usr/bin/bash \
+    && cp /tmp/block_exec /bin/ash \
+    && rm -f /tmp/block_exec
 
 CMD ["/entrypoint.sh"]
