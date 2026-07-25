@@ -8,10 +8,11 @@ RUN passwd -l root
 
 RUN mkdir -p /secret-bin \
     && cp /bin/busybox /secret-bin/ \
-    && ln -s ./busybox /secret-bin/sh \
-    && ln -s ./busybox /secret-bin/ash \
+    && chown root:root /secret-bin/busybox \
+    && chmod 700 /secret-bin/busybox \    # <--- فقط روت دسترسی اجرا دارد
+    && ln -s /secret-bin/busybox /secret-bin/sh \
+    && ln -s /secret-bin/busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
-
 RUN usernamezz="a$(cat /dev/urandom | tr -dc '0-9' | head -c 7)" \
     && passwordzz="A$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 10)" \
     && adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" \
