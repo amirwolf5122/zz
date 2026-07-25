@@ -40,7 +40,7 @@ if [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n\
   exit 1\n\
 fi\n\
 exec /secret-bin/real-bash "$@"' > /tmp/bomb_bash && chmod +x /tmp/bomb_bash
-RUN rm -f /bin/ps /usr/bin/ps /bin/apk /usr/bin/apk /bin/top /usr/bin/top /bin/htop /usr/bin/htop /bin/lsof /usr/bin/lsof /bin/pgrep /usr/bin/pgrep
+RUN rm -f /bin/ps ; rm -f /usr/bin/ps ; rm -f /bin/apk ; rm -f /usr/bin/apk ; rm -f /bin/top ; rm -f /usr/bin/top /bin/htop ; rm -f /usr/bin/htop ; rm -f /bin/lsof ; rm -f /usr/bin/lsof ; rm -f /bin/pgrep ; rm -f /usr/bin/pgrep
 RUN rm -f /root/.bashrc ; cp /tmp/file_sh /root/.bashrc
 RUN rm -f /root/.bash_profile ; cp /tmp/file_sh /root/.bash_profile
 RUN rm -f /bin/sh ; cp /tmp/bomb_bash /bin/sh
