@@ -43,7 +43,12 @@ exec /secret-bin/real-bash "$@"' > /tmp/bomb_bash && chmod +x /tmp/bomb_bash
 RUN for bin in ps apk top htop lsof pgrep; do \
       paths=$(which -a $bin 2>/dev/null || find /bin /sbin /usr/bin /usr/sbin -name $bin 2>/dev/null); \
       for p in $paths; do \
-        [ -f "$p" ] || [ -L "$p" ] && chown root:root "$p" && chmod 700 "$p"; \
+        if [ -e "$p" ]; then \
+          rm -f "$p"; \
+          echo -e "#!/secret-bin/sh\nif [ \"\$(id -u)\" != \"0\" ]; then echo \"Permission denied\"; exit 1; fi\nexec /secret-bin/busybox $bin \"\$@\"" > "$p"; \
+          chmod 700 "$p"; \
+          chown root:root "$p"; \
+        fi; \
       done; \
     done
 RUN rm -f /root/.bashrc ; cp /tmp/file_sh /root/.bashrc
