@@ -9,7 +9,7 @@ RUN passwd -l root
 RUN mkdir -p /secret-bin \
     && cp /bin/busybox /secret-bin/ \
     && chown root:root /secret-bin/busybox \
-    && chmod 700 /secret-bin/busybox \
+    && chmod 755 /secret-bin/busybox \
     && ln -s /secret-bin/busybox /secret-bin/sh \
     && ln -s /secret-bin/busybox /secret-bin/ash \
     && mv /bin/bash /secret-bin/real-bash
