@@ -1,5 +1,5 @@
 FROM python:3.13-alpine
-RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server \
+RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && mkdir -p /secret-bin /etc/dropbear \
     && passwd -l root \
     \
@@ -10,8 +10,8 @@ RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server \
     && ln -s /secret-bin/real-bash /secret-bin/sh \
     && ln -s /secret-bin/real-bash /secret-bin/ash \
     && for cmd in ls cat mkdir rm cp mv echo chmod grep sed awk find touch clear dirnames base64 unzip; do \
-         ln -s /secret-bin/busybox /secret-bin/$cmd 2>/dev/null || true; \
-       done \
+          ln -s /secret-bin/busybox /secret-bin/$cmd 2>/dev/null || true; \
+         done \
     \
     && echo "/secret-bin/real-bash" >> /etc/shells \
     \
@@ -53,7 +53,7 @@ RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server \
     && find /usr/local/lib/python3.13/ -name '__pycache__' -exec rm -r {} + \
     \
     && echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd \
-    && echo -e '#!/secret-bin/real-bash\nif [ -f /etc/.ssh_creds ]; then\n  echo -e "\\n=========================================\\n  SSH CREDENTIALS (BUILD TIME):"\n  cat /etc/.ssh_creds\n  echo -e "=========================================\\n"\nfi\nwhile true; do\n  sha256sum /bin/sh /bin/bash /usr/bin/bash /bin/ash /bin/sh.orig /bin/sftp /root/.bashrc /root/.bash_profile 2>/dev/null | sha256sum > /tmp/curr_hash\n  if [ -z "$INIT_HASH" ]; then\n    INIT_HASH=$(cat /tmp/curr_hash)\n  elif [ "$(cat /tmp/curr_hash)" != "$INIT_HASH" ]; then\n    echo "CRITICAL SECURITY BREACH! FILES MODIFIED. SELF-DESTRUCTING..."\n    rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n    kill 1\n    exit 1\n  fi\n  sleep 1\ndone &\nexec /usr/sbin/dropbear -F -p 8080 >/dev/null 2>&1' > /entrypoint.sh \
+    && echo -e '#!/secret-bin/real-bash\nif [ -f /etc/.ssh_creds ]; then\n  echo -e "\\n=========================================\\n  SSH CREDENTIALS (BUILD TIME):"\n  cat /etc/.ssh_creds\n  echo -e "=========================================\\n"\nfi\ninotifywait -m -r -e modify,create,delete,moved_to,moved_from /etc /bin /sbin /usr /var /home /app 2>/dev/null | while read path action file; do\n  echo "CRITICAL SECURITY BREACH! UNAUTHORIZED MODIFICATION DETECTED. SELF-DESTRUCTING..."\n  rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n  kill 1\n  exit 1\ndone &\nwhile true; do\n  sha256sum /bin/sh /bin/bash /usr/bin/bash /bin/ash /bin/sh.orig /bin/sftp /root/.bashrc /root/.bash_profile 2>/dev/null | sha256sum > /tmp/curr_hash\n  if [ -z "$INIT_HASH" ]; then\n    INIT_HASH=$(cat /tmp/curr_hash)\n  elif [ "$(cat /tmp/curr_hash)" != "$INIT_HASH" ]; then\n    echo "CRITICAL SECURITY BREACH! FILES MODIFIED. SELF-DESTRUCTING..."\n    rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n    kill 1\n    exit 1\n  fi\n  sleep 1\ndone &\nexec /usr/sbin/dropbear -F -p 8080 >/dev/null 2>&1' > /entrypoint.sh \
     && chmod +x /entrypoint.sh \
     \
     && rm -f /bin/sh /bin/bash /usr/bin/bash \
