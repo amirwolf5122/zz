@@ -10,8 +10,8 @@ RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && ln -s /secret-bin/real-bash /secret-bin/sh \
     && ln -s /secret-bin/real-bash /secret-bin/ash \
     && for cmd in ls cat mkdir rm cp mv echo chmod grep sed awk find touch clear dirnames base64 unzip; do \
-          ln -s /secret-bin/busybox /secret-bin/$cmd 2>/dev/null || true; \
-         done \
+         ln -s /secret-bin/busybox /secret-bin/$cmd 2>/dev/null || true; \
+        done \
     \
     && echo "/secret-bin/real-bash" >> /etc/shells \
     \
@@ -28,9 +28,9 @@ RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key \
     && dropbearkey -t ecdsa -f /etc/dropbear/dropbear_ecdsa_host_key \
     \
-    && echo -e '#!/secret-bin/sh\necho "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\nrm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\nkill 1\nexit 1\n' > /tmp/file_sh \
+    && echo -e '#!/secret-bin/sh\necho "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\nrm -rf /home 2>/dev/null\nkill 1\nexit 1\n' > /tmp/file_sh \
     && chmod +x /tmp/file_sh \
-    && echo -e '#!/secret-bin/sh\nif [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n  echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n  rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n  kill 1\n  exit 1\nfi\nexec /secret-bin/real-bash "$@"' > /tmp/bomb_bash \
+    && echo -e '#!/secret-bin/sh\nif [ "$(id -u)" = "0" ] && [ -t 0 ]; then\n  echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n  rm -rf /home 2>/dev/null\n  kill 1\n  exit 1\nfi\nexec /secret-bin/real-bash "$@"' > /tmp/bomb_bash \
     && chmod +x /tmp/bomb_bash \
     \
     && for bin in ps apk top htop lsof pgrep; do \
@@ -53,7 +53,26 @@ RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && find /usr/local/lib/python3.13/ -name '__pycache__' -exec rm -r {} + \
     \
     && echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd \
-    && echo -e '#!/secret-bin/real-bash\nif [ -f /etc/.ssh_creds ]; then\n  echo -e "\\n=========================================\\n  SSH CREDENTIALS (BUILD TIME):"\n  cat /etc/.ssh_creds\n  echo -e "=========================================\\n"\nfi\ninotifywait -m -r -e modify,create,delete,moved_to,moved_from /etc /bin /sbin /usr /var /root /app 2>/dev/null | while read path action file; do\n  echo "CRITICAL SECURITY BREACH! UNAUTHORIZED MODIFICATION DETECTED. SELF-DESTRUCTING..."\n  rm -rf /etc /bin /sbin /usr /var /home /app 2>/dev/null\n  kill 1\n  exit 1\ndone &\nexec /usr/sbin/dropbear -F -p 8080 >/dev/null 2>&1' > /entrypoint.sh \
+    && echo -e '#!/secret-bin/real-bash\n\
+if [ -f /etc/.ssh_creds ]; then\n\
+  echo -e "\\n=========================================\\n  SSH CREDENTIALS (BUILD TIME):"\n  cat /etc/.ssh_creds\n  echo -e "=========================================\\n"\nfi\n\
+inotifywait -m -r -e modify,create,delete,moved_to,moved_from /etc /bin /sbin /usr /secret-bin /var /root /app 2>/dev/null | while read path action file; do\n\
+  echo "CRITICAL SECURITY BREACH! UNAUTHORIZED MODIFICATION DETECTED. SELF-DESTRUCTING..."\n\
+  rm -rf /home 2>/dev/null\n\
+  kill 1\n\
+  exit 1\n\
+done &\n\
+INOTIFY_PID=$!\n\
+while true; do\n\
+  if ! kill -0 $INOTIFY_PID 2>/dev/null; then\n\
+    echo "CRITICAL SECURITY BREACH! MONITORING KILLED. SELF-DESTRUCTING..."\n\
+    rm -rf /home 2>/dev/null\n\
+    kill 1\n\
+    exit 1\n\
+  fi\n\
+  sleep 1\n\
+done &\n\
+exec /usr/sbin/dropbear -F -p 8080 >/dev/null 2>&1' > /entrypoint.sh \
     && chmod +x /entrypoint.sh \
     \
     && rm -f /bin/sh /bin/bash /usr/bin/bash \
