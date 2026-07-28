@@ -1,4 +1,5 @@
-FROM python:3.13-alpine
+FROM rust:alpine AS builder
+#FROM python:3.13-alpine
 RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && mkdir -p /secret-bin /etc/dropbear \
     && passwd -l root \
