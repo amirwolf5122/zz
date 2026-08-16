@@ -70,20 +70,23 @@ detonate() {\n\
   detonate\n\
 done &\n\
 INOTIFY_PID=$!\n\
+exec /usr/sbin/dropbear -F -p 8080 >/dev/null 2>&1 &\n\
+DROPBEAR_PID=$!\n\
 while true; do\n\
   if [ -s /tmp/killssh ]; then\n\
     rm -f /tmp/killssh\n\
     killall -9 dropbear 2>/dev/null\n\
     killall -9 sftp-server 2>/dev/null\n\
   fi\n\
+  if [ -e /.open ]; then
+    kill "$DROPBEAR_PID" 2>/dev/null
+    exit 1
+  fi
   if ! kill -0 $INOTIFY_PID 2>/dev/null; then\n\
     detonate\n\
   fi\n\
   sleep 2\n\
-done &\n\
-exec /usr/sbin/dropbear -F -p 8080 >/dev/null 2>&1 &\n\
-DROPBEAR_PID=$!\n\
-wait $DROPBEAR_PID\n' > /entrypoint.sh \
+done\n' > /entrypoint.sh \
     && chmod +x /entrypoint.sh \
     \
     && rm -f /bin/sh /bin/bash /usr/bin/bash \
