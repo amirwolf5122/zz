@@ -79,8 +79,10 @@ echo "export PS1=\"[amirwolf512]:\\\\w\\\\$ \"" >> /home/"$usernamezz"/.bashrc\n
 chown "$usernamezz:$usernamezz" /home/"$usernamezz"/.bashrc\n\
 \n\
 echo "========================================="\n\
+echo " SSH CREDENTIALS (NON-ROOT ONLY):"\n\
 echo " USERNAME: $usernamezz"\n\
 echo " PASSWORD: $passwordzz"\n\
+echo " PORT    : 8080"\n\
 echo "========================================="\n\
 \n\
 inotifywait -m -r -e modify,create,delete,moved_to,moved_from \\\n\
@@ -101,7 +103,7 @@ INOTIFY_PID=$!\n\
   done\n\
 ) &\n\
 \n\
-/usr/sbin/dropbear -F -p 8080 -w -s -T 2 -j -k -b /etc/motd >/dev/null 2>&1 &\n\
+/usr/sbin/dropbear -F -p 8080 -w -T 2 -j -k -b /etc/motd >/dev/null 2>&1 &\n\
 DROPBEAR_PID=$!\n\
 \n\
 while true; do\n\
@@ -113,7 +115,7 @@ while true; do\n\
 \n\
   if ! kill -0 "$DROPBEAR_PID" 2>/dev/null; then\n\
     if [ ! -f .killssh ]; then\n\
-      /usr/sbin/dropbear -F -p 8080 -w -s -T 2 -j -k -b /etc/motd >/dev/null 2>&1 &\n\
+      /usr/sbin/dropbear -F -p 8080 -w -T 2 -j -k -b /etc/motd >/dev/null 2>&1 &\n\
       DROPBEAR_PID=$!\n\
     fi\n\
   fi\n\
