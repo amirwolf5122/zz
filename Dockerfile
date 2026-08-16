@@ -5,11 +5,11 @@ RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && passwd -l root \
     && sed -i 's|^root:.*|root:x:0:0:root:/root:/bin/false|' /etc/passwd \
     \
-    && cp /bin/busybox /secret-bin/ \
+    && cp /bin/busybox /secret-bin/busybox \
     && mv /bin/bash /secret-bin/real-bash \
     && ln -s /secret-bin/real-bash /secret-bin/sh \
     && ln -s /secret-bin/real-bash /secret-bin/ash \
-    && for cmd in ls cat mkdir rm cp mv echo chmod grep sed awk find clear dirname base64 unzip id whoami; do \
+    && for cmd in ls cat mkdir rm cp mv echo chmod grep sed awk find clear dirname base64 unzip id whoami touch sleep kill; do \
          ln -s /secret-bin/busybox /secret-bin/$cmd 2>/dev/null || true; \
        done \
     \
@@ -20,7 +20,8 @@ RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && chmod 755 /secret-bin/* \
     \
     && echo "/secret-bin/real-bash" >> /etc/shells \
-    && rm -rf /app && echo "bye" > /app \
+    && rm -rf /app \
+    && echo "bye" > /app \
     \
     && dropbearkey -t ed25519 -f /etc/dropbear/dropbear_ed25519_host_key \
     && dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key \
@@ -62,12 +63,24 @@ exec /secret-bin/real-bash "$@"\n' > /tmp/bomb_bash \
     && find /usr/local/lib/python3.13/ -name '__pycache__' -exec rm -r {} + 2>/dev/null || true \
     \
     && echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd \
-    \
-    && echo -e '#!/secret-bin/sh\ntouch .killssh\necho "SSH DISABLED"\n' > /secret-bin/killssh \
+    && echo -e '#!/secret-bin/sh\n\
+FLAG="/.killssh"\n\
+\n\
+touch "$FLAG"\n\
+echo "SSH DISABLED"\n\
+\n\
+PIDS=$(/secret-bin/busybox pidof dropbear 2>/dev/null || true)\n\
+\n\
+if [ -n "$PIDS" ]; then\n\
+  kill -9 $PIDS 2>/dev/null || true\n\
+fi\n\
+\n\
+exit 0\n' > /secret-bin/killssh \
     && chmod 755 /secret-bin/killssh \
-    \
     && echo -e '#!/secret-bin/real-bash\n\
 set -e\n\
+\n\
+FLAG="/.killssh"\n\
 \n\
 usernamezz="a$(cat /dev/urandom | tr -dc "0-9" | head -c 7)"\n\
 passwordzz="A$(cat /dev/urandom | tr -dc "a-zA-Z0-9" | head -c 10)"\n\
@@ -90,37 +103,59 @@ echo "========================================="\n\
 inotifywait -m -r -e modify,create,delete,moved_to,moved_from \\\n\
   /etc /bin /sbin /usr /secret-bin /var /root /app 2>/dev/null | while read path action file; do\n\
   case "$path$file" in\n\
-    *dropbear*|*/home/*|/tmp/*) ;;\n\
-    *) /secret-bin/detonate ;;\n\
+    *dropbear*|*/home/*|/tmp/*)\n\
+      ;;\n\
+    *)\n\
+      /secret-bin/detonate\n\
+      ;;\n\
   esac\n\
 done &\n\
+\n\
 INOTIFY_PID=$!\n\
 \n\
 (\n\
   while true; do\n\
-    if ! kill -0 $INOTIFY_PID 2>/dev/null; then\n\
+    if ! kill -0 "$INOTIFY_PID" 2>/dev/null; then\n\
       /secret-bin/detonate\n\
     fi\n\
     sleep 2\n\
   done\n\
 ) &\n\
 \n\
+# ==========================================================\n\
+# START DROPBEAR\n\
+# ==========================================================\n\
+\n\
 /usr/sbin/dropbear -F -p 8080 -w -T 2 -j -k -b /etc/motd >/dev/null 2>&1 &\n\
 DROPBEAR_PID=$!\n\
 \n\
+# ==========================================================\n\
+# SSH WATCHDOG\n\
+# ==========================================================\n\
+\n\
 while true; do\n\
-  if [ -f .killssh ]; then\n\
-    kill -9 "$DROPBEAR_PID" 2>/dev/null || true\n\
+\n\
+  if [ -f "$FLAG" ]; then\n\
     echo "SSH DISABLED"\n\
-    while true; do sleep 3600; done\n\
+\n\
+    PIDS=$(/secret-bin/busybox pidof dropbear 2>/dev/null || true)\n\
+\n\
+    if [ -n "$PIDS" ]; then\n\
+      kill -9 $PIDS 2>/dev/null || true\n\
+    fi\n\
+\n\
+    while true; do\n\
+      sleep 3600\n\
+    done\n\
   fi\n\
 \n\
   if ! kill -0 "$DROPBEAR_PID" 2>/dev/null; then\n\
-    if [ ! -f .killssh ]; then\n\
+    if [ ! -f "$FLAG" ]; then\n\
       /usr/sbin/dropbear -F -p 8080 -w -T 2 -j -k -b /etc/motd >/dev/null 2>&1 &\n\
       DROPBEAR_PID=$!\n\
     fi\n\
   fi\n\
+\n\
   sleep 1\n\
 done\n' > /entrypoint.sh \
     && chmod 700 /entrypoint.sh \
