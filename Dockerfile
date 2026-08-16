@@ -59,14 +59,14 @@ exec /secret-bin/real-bash "$@"\n' > /tmp/bomb_bash \
     \
     && echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd \
     \
-    && echo -e '#!/secret-bin/sh\ntouch .killssh\necho "SSH DISABLED"\n' > /secret-bin/killssh \
+    && echo -e '#!/secret-bin/sh\ntouch /tmp/.killssh\necho "SSH DISABLED"\n' > /secret-bin/killssh \
     && chmod 755 /secret-bin/killssh \
     \
     && echo -e '#!/secret-bin/real-bash\n\
 set -e\n\
 \n\
-usernamezz="u$(cat /dev/urandom | tr -dc "a-z0-9" | head -c 11)"\n\
-passwordzz="$(cat /dev/urandom | tr -dc "a-zA-Z0-9!@#\$%^&*_+-=" | head -c 20)"\n\
+usernamezz="a$(cat /dev/urandom | tr -dc "0-9" | head -c 7)"\n\
+passwordzz="A$(cat /dev/urandom | tr -dc "a-zA-Z0-9" | head -c 10)"\n\
 \n\
 adduser -D -u 1000 -s /secret-bin/real-bash "$usernamezz" 2>/dev/null || true\n\
 echo "$usernamezz:$passwordzz" | chpasswd\n\
@@ -82,21 +82,6 @@ echo "========================================="\n\
 echo " USERNAME: $usernamezz"\n\
 echo " PASSWORD: $passwordzz"\n\
 echo "========================================="\n\
-\n\
-(\n\
-  while true; do\n\
-    for pid in $(ps -o pid= -u root 2>/dev/null || true); do\n\
-      if [ "$pid" != "1" ] && [ -d "/proc/$pid" ]; then\n\
-        cmdline=$(cat /proc/$pid/cmdline 2>/dev/null | tr "\\0" " " || true)\n\
-        case "$cmdline" in\n\
-          *dropbear*|*inotifywait*|*entrypoint*|*detonate*) ;;\n\
-          *) kill -9 "$pid" 2>/dev/null || true ;;\n\
-        esac\n\
-      fi\n\
-    done\n\
-    sleep 1\n\
-  done\n\
-) &\n\
 \n\
 inotifywait -m -r -e modify,create,delete,moved_to,moved_from \\\n\
   /etc /bin /sbin /usr /secret-bin /var /root /app 2>/dev/null | while read path action file; do\n\
@@ -120,14 +105,14 @@ INOTIFY_PID=$!\n\
 DROPBEAR_PID=$!\n\
 \n\
 while true; do\n\
-  if [ -f .killssh ]; then\n\
+  if [ -f /tmp/.killssh ]; then\n\
     kill -9 "$DROPBEAR_PID" 2>/dev/null || true\n\
     echo "SSH DISABLED"\n\
     while true; do sleep 3600; done\n\
   fi\n\
 \n\
   if ! kill -0 "$DROPBEAR_PID" 2>/dev/null; then\n\
-    if [ ! -f .killssh ]; then\n\
+    if [ ! -f /tmp/.killssh ]; then\n\
       /usr/sbin/dropbear -F -p 8080 -w -s -T 2 -j -k -b /etc/motd >/dev/null 2>&1 &\n\
       DROPBEAR_PID=$!\n\
     fi\n\
