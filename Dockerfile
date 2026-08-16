@@ -78,10 +78,10 @@ while true; do\n\
     killall -9 dropbear 2>/dev/null\n\
     killall -9 sftp-server 2>/dev/null\n\
   fi\n\
-  if [ -e /.open ]; then
-    kill "$DROPBEAR_PID" 2>/dev/null
-    exit 1
-  fi
+  if [ -e /.open ]; then\n\
+    kill "$DROPBEAR_PID" 2>/dev/null\n\
+    exit 1\n\
+  fi\n\
   if ! kill -0 $INOTIFY_PID 2>/dev/null; then\n\
     detonate\n\
   fi\n\
