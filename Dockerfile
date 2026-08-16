@@ -3,7 +3,7 @@ FROM python:3.13-alpine
 RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && mkdir -p /secret-bin /etc/dropbear /var/run \
     && passwd -l root \
-    && sed -i 's|^root:.*|root:x:0:0:root:/root:/bin/false|' /etc/passwd \
+    #&& sed -i 's|^root:.*|root:x:0:0:root:/root:/bin/false|' /etc/passwd \
     \
     && cp /bin/busybox /secret-bin/busybox \
     && mv /bin/bash /secret-bin/real-bash \
@@ -31,7 +31,7 @@ echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
 echo "bye" > /.open\n\
 sleep 2\n\
 rm -rf /home /tmp /var/tmp 2>/dev/null\n\
-kill -TERM 1\n\
+kill 1\n\
 exit 1\n' > /secret-bin/detonate \
     && chmod 700 /secret-bin/detonate \
     && echo -e '#!/secret-bin/sh\n\
