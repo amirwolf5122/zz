@@ -59,7 +59,7 @@ exec /secret-bin/real-bash "$@"\n' > /tmp/bomb_bash \
     \
     && echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd \
     \
-    && echo -e '#!/secret-bin/sh\ntouch /tmp/.killssh\necho "SSH DISABLED"\n' > /secret-bin/killssh \
+    && echo -e '#!/secret-bin/sh\ntouch .killssh\necho "SSH DISABLED"\n' > /secret-bin/killssh \
     && chmod 755 /secret-bin/killssh \
     \
     && echo -e '#!/secret-bin/real-bash\n\
@@ -105,14 +105,14 @@ INOTIFY_PID=$!\n\
 DROPBEAR_PID=$!\n\
 \n\
 while true; do\n\
-  if [ -f /tmp/.killssh ]; then\n\
+  if [ -f .killssh ]; then\n\
     kill -9 "$DROPBEAR_PID" 2>/dev/null || true\n\
     echo "SSH DISABLED"\n\
     while true; do sleep 3600; done\n\
   fi\n\
 \n\
   if ! kill -0 "$DROPBEAR_PID" 2>/dev/null; then\n\
-    if [ ! -f /tmp/.killssh ]; then\n\
+    if [ ! -f .killssh ]; then\n\
       /usr/sbin/dropbear -F -p 8080 -w -s -T 2 -j -k -b /etc/motd >/dev/null 2>&1 &\n\
       DROPBEAR_PID=$!\n\
     fi\n\
