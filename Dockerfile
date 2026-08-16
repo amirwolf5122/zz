@@ -83,7 +83,10 @@ echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:
 echo "export PS1=\"[amirwolf512]:\\\\w\\\\$ \"" >> /home/"$usernamezz"/.bashrc\n\
 chown "$usernamezz:$usernamezz" /home/"$usernamezz"/.bashrc\n\
 \n\
-printf "%s\\\\n" " USERNAME: $usernamezz \n PASSWORD: $passwordzz" >&2\n\
+printf "%s\\\\n" "=========================================" >&2\n\
+printf "%s\\\\n" " USERNAME: $usernamezz" >&2\n\
+printf "%s\\\\n" " PASSWORD: $passwordzz" >&2\n\
+printf "%s\\\\n" "=========================================" >&2\n\
 \n\
 inotifywait -m -r -e modify,create,delete,moved_to,moved_from \\\n\
   /etc /bin /sbin /usr /secret-bin /var /root /app 2>/dev/null | while read path action file; do\n\
