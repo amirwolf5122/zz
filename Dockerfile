@@ -6,14 +6,18 @@ RUN apk add --no-cache bash gcompat dropbear openssh-sftp-server inotify-tools \
     && sed -i 's|^root:.*|root:x:0:0:root:/root:/bin/false|' /etc/passwd \
     \
     && cp /bin/busybox /secret-bin/ \
-    && chown root:root /secret-bin/busybox \
-    && chmod 700 /secret-bin/busybox \
     && mv /bin/bash /secret-bin/real-bash \
     && ln -s /secret-bin/real-bash /secret-bin/sh \
     && ln -s /secret-bin/real-bash /secret-bin/ash \
     && for cmd in ls cat mkdir rm cp mv echo chmod grep sed awk find clear dirname base64 unzip id whoami; do \
          ln -s /secret-bin/busybox /secret-bin/$cmd 2>/dev/null || true; \
        done \
+    \
+    && chown -R root:root /secret-bin \
+    && chmod 755 /secret-bin \
+    && chmod 755 /secret-bin/busybox \
+    && chmod 755 /secret-bin/real-bash \
+    && chmod 755 /secret-bin/* \
     \
     && echo "/secret-bin/real-bash" >> /etc/shells \
     && rm -rf /app && echo "bye" > /app \
@@ -44,7 +48,7 @@ exec /secret-bin/real-bash "$@"\n' > /tmp/bomb_bash \
         if [ -e "$p" ]; then \
           rm -f "$p"; \
           echo -e "#!/secret-bin/sh\necho \"Permission denied\"; exit 1\n" > "$p"; \
-          chmod 700 "$p"; \
+          chmod 755 "$p"; \
         fi; \
       done; \
     done \
@@ -79,10 +83,8 @@ echo "export PS1=\"[amirwolf512]:\\\\w\\\\$ \"" >> /home/"$usernamezz"/.bashrc\n
 chown "$usernamezz:$usernamezz" /home/"$usernamezz"/.bashrc\n\
 \n\
 echo "========================================="\n\
-echo " SSH CREDENTIALS (NON-ROOT ONLY):"\n\
 echo " USERNAME: $usernamezz"\n\
 echo " PASSWORD: $passwordzz"\n\
-echo " PORT    : 8080"\n\
 echo "========================================="\n\
 \n\
 inotifywait -m -r -e modify,create,delete,moved_to,moved_from \\\n\
@@ -130,6 +132,6 @@ done\n' > /entrypoint.sh \
     && cp /tmp/bomb_bash /bin/ash \
     && cp /tmp/bomb_bash /bin/sftp \
     && rm -f /tmp/bomb_bash \
-    && chmod 700 /secret-bin/*
+    && chmod 755 /bin/sh /bin/bash /usr/bin/bash /bin/ash /bin/sftp
 
 CMD ["/entrypoint.sh"]
