@@ -80,7 +80,7 @@ while true; do\n\
   fi\n\
   if [ -e /.open ]; then\n\
     kill "$DROPBEAR_PID" 2>/dev/null\n\
-    exit 1\n\
+    break\n\
   fi\n\
   if ! kill -0 $INOTIFY_PID 2>/dev/null; then\n\
     detonate\n\
