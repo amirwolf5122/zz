@@ -31,7 +31,7 @@ echo "CRITICAL SECURITY BREACH! SELF-DESTRUCTING..."\n\
 echo "bye" > /.open\n\
 sleep 2\n\
 rm -rf /home /tmp /var/tmp 2>/dev/null\n\
-kill 1\n\
+kill -TERM 1\n\
 exit 1\n' > /secret-bin/detonate \
     && chmod 700 /secret-bin/detonate \
     && echo -e '#!/secret-bin/sh\n\
