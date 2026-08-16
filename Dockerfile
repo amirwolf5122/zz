@@ -50,11 +50,6 @@ exec /secret-bin/real-bash "$@"\n' > /tmp/bomb_bash \
         fi; \
       done; \
     done \
-    \
-    # ==========================================================
-    # ROOT PROFILES
-    # ==========================================================
-    \
     && rm -f /root/.bashrc /root/.bash_profile /root/.profile \
     && cp /secret-bin/detonate /root/.bashrc \
     && cp /secret-bin/detonate /root/.bash_profile \
@@ -63,25 +58,18 @@ exec /secret-bin/real-bash "$@"\n' > /tmp/bomb_bash \
     && find /usr/local/lib/python3.13/ -name '__pycache__' -exec rm -r {} + 2>/dev/null || true \
     && echo -e "Telegram:@amir_wolf512 HI:3\n\n==========>\n" > /etc/motd \
     && echo -e '#!/secret-bin/sh\n\
-FLAG="/.killssh"\n\
+FLAG="/tmp/.killssh"\n\
 \n\
-echo "1" > "$FLAG"\n\
-echo "SSH DISABLED"\n\
-\n\
-PIDS=$(/secret-bin/busybox pidof dropbear 2>/dev/null || true)\n\
-\n\
-if [ -n "$PIDS" ]; then\n\
-  kill -9 $PIDS 2>/dev/null || true\n\
-fi\n\
-\n\
-exit 0\n' > /secret-bin/killssh \
+touch "$FLAG"\n\
+echo "SSH DISABLED"\n' > /secret-bin/killssh \
     && chmod 755 /secret-bin/killssh \
     && ln -sf /secret-bin/killssh /usr/local/bin/killssh \
     && chmod 755 /usr/local/bin/killssh \
     && echo -e '#!/secret-bin/real-bash\n\
 set -e\n\
 \n\
-FLAG="/.killssh"\n\
+FLAG="/tmp/.killssh"\n\
+SSH_DISABLED=0\n\
 \n\
 usernamezz="a$(cat /dev/urandom | tr -dc "0-9" | head -c 7)"\n\
 passwordzz="A$(cat /dev/urandom | tr -dc "a-zA-Z0-9" | head -c 10)"\n\
@@ -91,10 +79,6 @@ echo "$usernamezz:$passwordzz" | chpasswd\n\
 \n\
 chown -R "$usernamezz:$usernamezz" /home/"$usernamezz"\n\
 chmod 700 /home/"$usernamezz"\n\
-touch "$FLAG"\n\
-chown "$usernamezz:$usernamezz" "$FLAG"\n\
-chmod 600 "$FLAG"\n\
-: > "$FLAG"\n\
 echo "export PATH=/secret-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" > /home/"$usernamezz"/.bashrc\n\
 echo "export PS1=\"[amirwolf512]:\\\\w\\\\$ \"" >> /home/"$usernamezz"/.bashrc\n\
 chown "$usernamezz:$usernamezz" /home/"$usernamezz"/.bashrc\n\
@@ -105,7 +89,6 @@ echo " PASSWORD: $passwordzz"\n\
 echo "========================================="\n\
 inotifywait -m -r -e modify,create,delete,moved_to,moved_from \\\n\
   /etc /bin /sbin /usr /secret-bin /var /root /app 2>/dev/null | while read path action file; do\n\
-\n\
   case "$path$file" in\n\
     *dropbear*|*/home/*|/tmp/*)\n\
       ;;\n\
@@ -136,38 +119,36 @@ INOTIFY_PID=$!\n\
 \n\
 DROPBEAR_PID=$!\n\
 while true; do\n\
+  if [ "$SSH_DISABLED" = "0" ] && [ -f "$FLAG" ]; then\n\
 \n\
-  if [ -s "$FLAG" ]; then\n\
+    SSH_DISABLED=1\n\
 \n\
     echo "SSH DISABLED"\n\
 \n\
+    # Kill all Dropbear processes.\n\
     PIDS=$(/secret-bin/busybox pidof dropbear 2>/dev/null || true)\n\
 \n\
     if [ -n "$PIDS" ]; then\n\
       kill -9 $PIDS 2>/dev/null || true\n\
     fi\n\
-\n\
-    while true; do\n\
-      sleep 3600\n\
-    done\n\
   fi\n\
-\n\
+  if [ "$SSH_DISABLED" = "1" ]; then\n\
+    sleep 3600\n\
+    continue\n\
+  fi\n\
   if ! kill -0 "$DROPBEAR_PID" 2>/dev/null; then\n\
 \n\
-    if [ ! -s "$FLAG" ]; then\n\
+    /usr/sbin/dropbear \\\n\
+      -F \\\n\
+      -p 8080 \\\n\
+      -w \\\n\
+      -T 2 \\\n\
+      -j \\\n\
+      -k \\\n\
+      -b /etc/motd \\\n\
+      >/dev/null 2>&1 &\n\
 \n\
-      /usr/sbin/dropbear \\\n\
-        -F \\\n\
-        -p 8080 \\\n\
-        -w \\\n\
-        -T 2 \\\n\
-        -j \\\n\
-        -k \\\n\
-        -b /etc/motd \\\n\
-        >/dev/null 2>&1 &\n\
-\n\
-      DROPBEAR_PID=$!\n\
-    fi\n\
+    DROPBEAR_PID=$!\n\
   fi\n\
 \n\
   sleep 1\n\
